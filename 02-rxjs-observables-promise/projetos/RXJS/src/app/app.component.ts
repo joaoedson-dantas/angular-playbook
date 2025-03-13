@@ -1,4 +1,5 @@
 import { Component, OnInit } from "@angular/core";
+import { error } from "console";
 import { Observable } from "rxjs";
 
 @Component({
@@ -54,12 +55,31 @@ export class AppComponent implements OnInit {
     //   // reject
     //   .catch((e) => console.log(e));
 
-    this.minhaObservable("Eduardo")
-      // Assinando os resultados do observable
-      .subscribe(
-          result => console.log(result), 
-          error => console.log(error));
-      
+    // this.minhaObservable("Eduardo")
+    //   // Assinando os resultados do observable
+    //   .subscribe(
+    //       result => console.log(result),
+    //       error => console.log(error));
+
+    const observer = {
+      // mesma coisa de subscriber.next
+      next: (valor) => console.log("next", valor),
+      error: (err) => console.log("Erro", err),
+      complete: () => console.log("Fim"),
+    };
+
+    // const obs = this.minhaObservable("Eduardo");
+
+    // obs.subscribe(observer);
+
+    const userObserverble = this.usuarioObservable('Admin', 'joaoe@mail.com');
+    const subscription = userObserverble.subscribe(observer);
+
+    setTimeout(() => {
+      subscription.unsubscribe()
+      console.log(subscription.closed)
+    }, 3500)
+
   }
 
   minhaPromise(nome: string): Promise<string> {
@@ -88,9 +108,35 @@ export class AppComponent implements OnInit {
         setTimeout(() => {
           subscriber.next("Resposta com delay");
         }, 5000);
+        // Aqui, não vai enviar mais observables. Pois o método já fez tudo que tinha que fzer
+        subscriber.complete();
       } else {
         subscriber.error("Ops! Deu erro!");
       }
     });
+  }
+
+  usuarioObservable(nome: string, email: string): Observable<Usuario> {
+    return new Observable(sub => {
+      if (nome === 'Admin') {
+        let usuario = new Usuario(nome, email);
+
+        setTimeout(() => sub.next(usuario), 1000);
+        setTimeout(() => sub.next(usuario), 2000);
+        setTimeout(() => sub.next(usuario), 3000);
+        setTimeout(() => sub.next(usuario), 4000);
+        setTimeout(() => sub.complete(), 5000);
+      }
+    })
+  } 
+}
+
+export class Usuario {
+  nome: string;
+  email: string;
+
+  constructor(nome: string, email: string) {
+    this.nome = nome;
+    this.email = email;
   }
 }
